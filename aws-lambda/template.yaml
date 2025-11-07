@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Diabetes Management App - Audio Transcription Service
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 512
+    Runtime: python3.13
+    Environment:
+      Variables:
+        S3_BUCKET_NAME: !Ref AudioRecordingsBucket
+        TRANSCRIBE_OUTPUT_BUCKET: !Ref TranscriptionOutputBucket
+
+Resources:
+  # S3 Bucket for audio recordings
+  AudioRecordingsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'diabetes-app-audio-${AWS::AccountId}'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+            AllowedHeaders:
+              - '*'
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldRecordings
+            Status: Enabled
+            ExpirationInDays: 90  # Keep recordings for 90 days
+
+  # S3 Bucket for transcription outputs
+  TranscriptionOutputBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'diabetes-app-transcriptions-${AWS::AccountId}'
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldTranscriptions
+            Status: Enabled
+            ExpirationInDays: 365  # Keep transcriptions for 1 year
+
+  # Lambda Function
+  AudioTranscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: audio-transcription/
+      Handler: lambda_function.lambda_handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref AudioRecordingsBucket
+        - S3ReadPolicy:
+            BucketName: !Ref TranscriptionOutputBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - transcribe:StartMedicalTranscriptionJob
+                - transcribe:GetMedicalTranscriptionJob
+                - transcribe:ListMedicalTranscriptionJobs
+              Resource: '*'
+      Events:
+        UploadAudio:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: POST
+            RestApiId: !Ref TranscriptionApi
+        GetStatus:
+          Type: Api
+          Properties:
+            Path: /status/{jobName}
+            Method: GET
+            RestApiId: !Ref TranscriptionApi
+        GetTranscript:
+          Type: Api
+          Properties:
+            Path: /transcript/{jobName}
+            Method: GET
+            RestApiId: !Ref TranscriptionApi
+        OptionsUpload:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: OPTIONS
+            RestApiId: !Ref TranscriptionApi
+        OptionsStatus:
+          Type: Api
+          Properties:
+            Path: /status/{jobName}
+            Method: OPTIONS
+            RestApiId: !Ref TranscriptionApi
+        OptionsTranscript:
+          Type: Api
+          Properties:
+            Path: /transcript/{jobName}
+            Method: OPTIONS
+            RestApiId: !Ref TranscriptionApi
+
+  # API Gateway
+  TranscriptionApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET, POST, OPTIONS'"
+        AllowHeaders: "'Content-Type, Authorization'"
+        AllowOrigin: "'*'"
+      BinaryMediaTypes:
+        - 'audio/*'
+        - 'multipart/form-data'
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${TranscriptionApi}.execute-api.${AWS::Region}.amazonaws.com/prod'
+  AudioBucketName:
+    Description: 'S3 bucket for audio recordings'
+    Value: !Ref AudioRecordingsBucket
+  TranscriptionBucketName:
+    Description: 'S3 bucket for transcriptions'
+    Value: !Ref TranscriptionOutputBucket
+  LambdaFunctionArn:
+    Description: 'Lambda Function ARN'
+    Value: !GetAtt AudioTranscriptionFunction.Arn

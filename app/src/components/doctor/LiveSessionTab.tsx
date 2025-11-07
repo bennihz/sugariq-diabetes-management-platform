@@ -20,6 +20,9 @@ interface SessionSummary {
   recommendations: string[];
 }
 
+// TODO: Replace with your actual Lambda API endpoint after deployment
+const LAMBDA_API_ENDPOINT = import.meta.env.VITE_LAMBDA_API_URL || 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod';
+
 const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
   const [sessionStage, setSessionStage] = useState<SessionStage>('selection');
   const [sessionType, setSessionType] = useState<SessionType>(null);
@@ -29,8 +32,11 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
   const [sessionDuration, setSessionDuration] = useState(0);
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [webhookStatus, setWebhookStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [transcriptionStatus, setTranscriptionStatus] = useState<'idle' | 'uploading' | 'transcribing' | 'completed' | 'error'>('idle');
+  const [transcriptionProgress, setTranscriptionProgress] = useState<string>('');
+  const [awsJobName, setAwsJobName] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioBlobRef = useRef<Blob | null>(null);
@@ -132,54 +138,150 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
     }
   };
 
-  const sendRecordingToWebhook = async () => {
-    const webhookUrl = 'http://88.198.55.83:5678/webhook-test/1916b9f8-bb5f-4be2-920e-49dececfad56';
-
+  const uploadToLambda = async (): Promise<string | null> => {
     const audioBlob = audioBlobRef.current;
 
     if (!audioBlob) {
       console.error('No audio recording available');
-      setWebhookStatus('error');
-      return false;
+      setTranscriptionStatus('error');
+      setTranscriptionProgress('No audio recording available');
+      return null;
     }
 
-    setWebhookStatus('sending');
+    setTranscriptionStatus('uploading');
+    setTranscriptionProgress('Uploading audio to AWS S3...');
 
     try {
-      // Create form data with the actual recorded audio
-      const formData = new FormData();
-      const filename = `appointment_${patient.name.replace(/\s+/g, '_')}_${Date.now()}.webm`;
+      // Convert blob to base64
+      const base64Audio = await blobToBase64(audioBlob);
 
-      formData.append('audio', audioBlob, filename);
-      formData.append('patientName', patient.name);
-      formData.append('patientId', patient.id);
-      formData.append('duration', sessionDuration.toString());
-      formData.append('timestamp', new Date().toISOString());
-
-      console.log('Sending audio file to webhook:', {
-        filename,
-        size: audioBlob.size,
-        type: audioBlob.type,
-      });
-
-      // Send to webhook
-      const response = await fetch(webhookUrl, {
+      // Send to Lambda
+      const response = await fetch(`${LAMBDA_API_ENDPOINT}/upload`, {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audio: base64Audio.split(',')[1], // Remove data:audio/webm;base64, prefix
+          patientName: patient.name,
+          patientId: patient.id,
+          duration: sessionDuration.toString(),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`Webhook returned ${response.status}`);
+        throw new Error(`Lambda returned ${response.status}`);
       }
 
-      console.log('Recording successfully sent to n8n webhook');
-      setWebhookStatus('success');
-      return true;
+      const data = await response.json();
+      console.log('Upload response:', data);
+
+      if (data.jobName) {
+        setAwsJobName(data.jobName);
+        setTranscriptionStatus('transcribing');
+        setTranscriptionProgress('AWS Transcribe Medical is processing...');
+
+        // Start polling for transcription status
+        startPollingTranscription(data.jobName);
+
+        return data.jobName;
+      } else {
+        throw new Error('No job name returned from Lambda');
+      }
     } catch (error) {
-      console.error('Error sending recording to webhook:', error);
-      setWebhookStatus('error');
-      // Don't fail the session if webhook fails
-      return false;
+      console.error('Error uploading to Lambda:', error);
+      setTranscriptionStatus('error');
+      setTranscriptionProgress(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return null;
+    }
+  };
+
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const startPollingTranscription = (jobName: string) => {
+    // Poll every 3 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      checkTranscriptionStatus(jobName);
+    }, 3000);
+
+    // Initial check
+    checkTranscriptionStatus(jobName);
+  };
+
+  const checkTranscriptionStatus = async (jobName: string) => {
+    try {
+      const response = await fetch(`${LAMBDA_API_ENDPOINT}/status/${jobName}`);
+
+      if (!response.ok) {
+        throw new Error(`Status check failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Transcription status:', data);
+
+      if (data.status === 'COMPLETED') {
+        // Stop polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+
+        // Fetch the actual transcription
+        await fetchTranscription(jobName);
+      } else if (data.status === 'FAILED') {
+        // Stop polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+
+        setTranscriptionStatus('error');
+        setTranscriptionProgress(`Transcription failed: ${data.failureReason || 'Unknown error'}`);
+      }
+      // If IN_PROGRESS, keep polling
+    } catch (error) {
+      console.error('Error checking transcription status:', error);
+    }
+  };
+
+  const fetchTranscription = async (jobName: string) => {
+    try {
+      setTranscriptionProgress('Fetching transcription results...');
+
+      const response = await fetch(`${LAMBDA_API_ENDPOINT}/transcript/${jobName}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch transcription: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Transcription data:', data);
+
+      if (data.transcript) {
+        // Clear mock transcript and show real one
+        setTranscript([]);
+
+        // Parse the transcription and add it to display
+        const transcriptText = data.transcript;
+
+        // For now, add the full transcript as a single line
+        // In production, you might want to split by sentences or use speaker diarization
+        addTranscriptLine(`Transcription: ${transcriptText}`);
+
+        setTranscriptionStatus('completed');
+        setTranscriptionProgress('Transcription completed successfully');
+      }
+    } catch (error) {
+      console.error('Error fetching transcription:', error);
+      setTranscriptionStatus('error');
+      setTranscriptionProgress(`Failed to fetch transcription: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -192,7 +294,7 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
       clearInterval(intervalRef.current);
     }
 
-    // If it's an in-person recording, stop the MediaRecorder and send to n8n webhook
+    // If it's an in-person recording, stop the MediaRecorder and upload to Lambda
     if (sessionType === 'in-person' && mediaRecorderRef.current) {
       console.log('Stopping recording...');
       mediaRecorderRef.current.stop();
@@ -200,8 +302,8 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
       // Wait for the recording to be processed (onstop event)
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      console.log('Sending recording to n8n webhook for transcription...');
-      await sendRecordingToWebhook();
+      console.log('Uploading recording to AWS Lambda...');
+      await uploadToLambda();
     }
 
     // Simulate AI summary generation (AWS Bedrock/Comprehend Medical)
@@ -265,9 +367,17 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
     setTranscript([]);
     setSessionDuration(0);
     setSessionSummary(null);
-    setWebhookStatus('idle');
+    setTranscriptionStatus('idle');
+    setTranscriptionProgress('');
+    setAwsJobName(null);
     audioBlobRef.current = null;
     audioChunksRef.current = [];
+
+    // Clear polling interval if active
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
   };
 
   // Selection Screen
@@ -423,7 +533,7 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
                 </p>
                 <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-900 bg-opacity-50 rounded-lg mb-4">
                   <Upload className="h-4 w-4 text-blue-400" />
-                  <span className="text-xs text-blue-300">Will upload to n8n webhook on completion</span>
+                  <span className="text-xs text-blue-300">Will upload to AWS Lambda → S3 → Transcribe Medical</span>
                 </div>
                 <div className="mt-6 flex items-center justify-center space-x-2">
                   <div className="h-2 w-2 bg-success-500 rounded-full animate-pulse"></div>
@@ -508,30 +618,34 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
           </div>
         </div>
 
-        {/* n8n Webhook Status (only for in-person recordings) */}
+        {/* AWS Transcription Status (only for in-person recordings) */}
         {sessionType === 'in-person' && (
           <div className={`card ${
-            webhookStatus === 'success' ? 'bg-success-50 border-success-200' :
-            webhookStatus === 'error' ? 'bg-danger-50 border-danger-200' :
-            'bg-blue-50 border-blue-200'
+            transcriptionStatus === 'completed' ? 'bg-success-50 border-success-200' :
+            transcriptionStatus === 'error' ? 'bg-danger-50 border-danger-200' :
+            transcriptionStatus === 'transcribing' ? 'bg-blue-50 border-blue-200' :
+            'bg-gray-50 border-gray-200'
           }`}>
             <div className="flex items-center space-x-3">
-              {webhookStatus === 'success' && <CheckCircle className="h-6 w-6 text-success-600" />}
-              {webhookStatus === 'error' && <Upload className="h-6 w-6 text-danger-600" />}
-              {webhookStatus === 'sending' && (
+              {transcriptionStatus === 'completed' && <CheckCircle className="h-6 w-6 text-success-600" />}
+              {transcriptionStatus === 'error' && <Upload className="h-6 w-6 text-danger-600" />}
+              {(transcriptionStatus === 'uploading' || transcriptionStatus === 'transcribing') && (
                 <div className="h-6 w-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
               )}
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">
-                  {webhookStatus === 'success' && 'Recording Sent to n8n Webhook'}
-                  {webhookStatus === 'error' && 'Failed to Send Recording'}
-                  {webhookStatus === 'sending' && 'Sending Recording to n8n...'}
+                  {transcriptionStatus === 'completed' && 'Transcription Complete'}
+                  {transcriptionStatus === 'error' && 'Transcription Failed'}
+                  {transcriptionStatus === 'uploading' && 'Uploading to AWS...'}
+                  {transcriptionStatus === 'transcribing' && 'AWS Transcribe Medical Processing...'}
+                  {transcriptionStatus === 'idle' && 'Processing...'}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {webhookStatus === 'success' && 'Audio file successfully uploaded for AWS Transcribe Medical processing'}
-                  {webhookStatus === 'error' && 'Unable to connect to webhook. Recording saved locally.'}
-                  {webhookStatus === 'sending' && 'Uploading audio file to n8n workflow...'}
+                  {transcriptionProgress || 'Audio uploaded to S3 and queued for transcription'}
                 </p>
+                {awsJobName && (
+                  <p className="text-xs text-gray-500 mt-1">Job ID: {awsJobName}</p>
+                )}
               </div>
             </div>
           </div>
