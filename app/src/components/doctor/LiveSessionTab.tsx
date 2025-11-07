@@ -29,7 +29,11 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
   const [sessionDuration, setSessionDuration] = useState(0);
   const [sessionSummary, setSessionSummary] = useState<SessionSummary | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [webhookStatus, setWebhookStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioBlobRef = useRef<Blob | null>(null);
 
   useEffect(() => {
     if (isSessionActive) {
@@ -86,9 +90,97 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
     }, 20000);
   };
 
-  const startInPersonRecording = () => {
-    setIsRecording(true);
-    startSession('in-person');
+  const startInPersonRecording = async () => {
+    try {
+      // Request microphone permission
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Create MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm', // Most browsers support this
+      });
+
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      // Collect audio data
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      // When recording stops, create the blob
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        audioBlobRef.current = blob;
+        console.log('Recording stopped. Audio blob size:', blob.size, 'bytes');
+
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+      startSession('in-person');
+
+      console.log('Started recording audio...');
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Unable to access microphone. Please grant permission and try again.');
+    }
+  };
+
+  const sendRecordingToWebhook = async () => {
+    const webhookUrl = 'http://88.198.55.83:5678/webhook-test/1916b9f8-bb5f-4be2-920e-49dececfad56';
+
+    const audioBlob = audioBlobRef.current;
+
+    if (!audioBlob) {
+      console.error('No audio recording available');
+      setWebhookStatus('error');
+      return false;
+    }
+
+    setWebhookStatus('sending');
+
+    try {
+      // Create form data with the actual recorded audio
+      const formData = new FormData();
+      const filename = `appointment_${patient.name.replace(/\s+/g, '_')}_${Date.now()}.webm`;
+
+      formData.append('audio', audioBlob, filename);
+      formData.append('patientName', patient.name);
+      formData.append('patientId', patient.id);
+      formData.append('duration', sessionDuration.toString());
+      formData.append('timestamp', new Date().toISOString());
+
+      console.log('Sending audio file to webhook:', {
+        filename,
+        size: audioBlob.size,
+        type: audioBlob.type,
+      });
+
+      // Send to webhook
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Webhook returned ${response.status}`);
+      }
+
+      console.log('Recording successfully sent to n8n webhook');
+      setWebhookStatus('success');
+      return true;
+    } catch (error) {
+      console.error('Error sending recording to webhook:', error);
+      setWebhookStatus('error');
+      // Don't fail the session if webhook fails
+      return false;
+    }
   };
 
   const endSession = async () => {
@@ -98,6 +190,18 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
 
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+    }
+
+    // If it's an in-person recording, stop the MediaRecorder and send to n8n webhook
+    if (sessionType === 'in-person' && mediaRecorderRef.current) {
+      console.log('Stopping recording...');
+      mediaRecorderRef.current.stop();
+
+      // Wait for the recording to be processed (onstop event)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      console.log('Sending recording to n8n webhook for transcription...');
+      await sendRecordingToWebhook();
     }
 
     // Simulate AI summary generation (AWS Bedrock/Comprehend Medical)
@@ -161,6 +265,9 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
     setTranscript([]);
     setSessionDuration(0);
     setSessionSummary(null);
+    setWebhookStatus('idle');
+    audioBlobRef.current = null;
+    audioChunksRef.current = [];
   };
 
   // Selection Screen
@@ -311,9 +418,13 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
                   )}
                 </div>
                 <p className="text-lg text-gray-300 mb-2">Recording In-Person Appointment</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 mb-3">
                   Audio is being captured and will be transcribed using AWS Transcribe Medical
                 </p>
+                <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-900 bg-opacity-50 rounded-lg mb-4">
+                  <Upload className="h-4 w-4 text-blue-400" />
+                  <span className="text-xs text-blue-300">Will upload to n8n webhook on completion</span>
+                </div>
                 <div className="mt-6 flex items-center justify-center space-x-2">
                   <div className="h-2 w-2 bg-success-500 rounded-full animate-pulse"></div>
                   <div className="h-2 w-2 bg-success-500 rounded-full animate-pulse delay-75"></div>
@@ -396,6 +507,35 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
             </div>
           </div>
         </div>
+
+        {/* n8n Webhook Status (only for in-person recordings) */}
+        {sessionType === 'in-person' && (
+          <div className={`card ${
+            webhookStatus === 'success' ? 'bg-success-50 border-success-200' :
+            webhookStatus === 'error' ? 'bg-danger-50 border-danger-200' :
+            'bg-blue-50 border-blue-200'
+          }`}>
+            <div className="flex items-center space-x-3">
+              {webhookStatus === 'success' && <CheckCircle className="h-6 w-6 text-success-600" />}
+              {webhookStatus === 'error' && <Upload className="h-6 w-6 text-danger-600" />}
+              {webhookStatus === 'sending' && (
+                <div className="h-6 w-6 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900">
+                  {webhookStatus === 'success' && 'Recording Sent to n8n Webhook'}
+                  {webhookStatus === 'error' && 'Failed to Send Recording'}
+                  {webhookStatus === 'sending' && 'Sending Recording to n8n...'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {webhookStatus === 'success' && 'Audio file successfully uploaded for AWS Transcribe Medical processing'}
+                  {webhookStatus === 'error' && 'Unable to connect to webhook. Recording saved locally.'}
+                  {webhookStatus === 'sending' && 'Uploading audio file to n8n workflow...'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* AI Summary */}
         <div className="card">
