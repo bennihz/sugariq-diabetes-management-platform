@@ -1,4 +1,4 @@
-# DiabetesCare - Diabetes Management Platform
+# SugarIQ - Diabetes Management Platform
 
 ## Quick Start
 

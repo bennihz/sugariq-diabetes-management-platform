@@ -96,6 +96,14 @@ export const mockAppointments: Appointment[] = [
   { id: 'A054', patientId: 'P2019', date: '2025-06-02', time: '15:00', duration: 45, status: 'completed', notes: 'Compliance discussion' },
   { id: 'A055', patientId: 'P2019', date: '2025-09-02', time: '15:00', duration: 45, status: 'completed', notes: 'Alcohol use counseling' },
   { id: 'A056', patientId: 'P2019', date: '2025-12-02', time: '15:00', duration: 45, status: 'scheduled', notes: 'Quarterly review' },
+
+  // P2020 - Tobias Lettenmeier (Demo patient)
+  { id: 'A057', patientId: 'P2020', date: '2025-03-15', time: '09:00', duration: 45, status: 'completed', notes: 'Annual diabetes review' },
+  { id: 'A058', patientId: 'P2020', date: '2025-06-15', time: '09:00', duration: 30, status: 'completed', notes: 'A1C check and medication review' },
+  { id: 'A059', patientId: 'P2020', date: '2025-09-15', time: '09:00', duration: 30, status: 'completed', notes: 'Quarterly checkup' },
+  { id: 'A060', patientId: 'P2020', date: '2025-11-08', time: '14:00', duration: 15, status: 'completed', notes: 'Lab review - A1C 7.2%, new Metformin prescription' },
+  { id: 'A061', patientId: 'P2020', date: '2025-12-15', time: '09:00', duration: 30, status: 'scheduled', notes: 'Follow-up on medication and glucose control' },
+  { id: 'A062', patientId: 'P2020', date: '2026-03-15', time: '09:00', duration: 45, status: 'scheduled', notes: 'Annual comprehensive exam' },
 ];
 
 // Helper function to get appointments by patient ID

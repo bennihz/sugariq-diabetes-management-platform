@@ -84,7 +84,7 @@ const TranscriptionsTab: React.FC<TranscriptionsTabProps> = ({ transcripts }) =>
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-semibold text-gray-900 capitalize">
-                            {message.speaker === 'doctor' ? 'Dr. Smith' : 'Patient'}
+                            {message.speaker === 'doctor' ? 'Dr. Afsoon' : 'Patient'}
                           </span>
                           <span className="text-xs text-gray-500">{message.timestamp}</span>
                         </div>

@@ -40,9 +40,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (role === 'doctor') {
       newUser = {
         id: 'doctor-1',
-        name: 'Dr. Sarah Smith',
+        name: 'Dr. Afsoon',
         role: 'doctor',
-        email: 'dr.smith@hospital.com',
+        email: 'dr.afsoon@hospital.com',
+        profileImage: '/dr-afsoon.jpeg',
       };
     } else {
       // For patient login, use the first patient or specified patient
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         name: patient.name,
         role: 'patient',
         email: patient.email,
+        profileImage: patient.profileImage,
       };
     }
 

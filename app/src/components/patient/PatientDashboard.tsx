@@ -32,8 +32,19 @@ const PatientDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Welcome Banner */}
       <div className="card bg-gradient-to-r from-primary-500 to-primary-600 text-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, {patient.name.split(' ')[0]}!</h1>
-        <p className="text-primary-100">Here's your health overview</p>
+        <div className="flex items-center space-x-4">
+          {patient.profileImage && (
+            <img
+              src={patient.profileImage}
+              alt={patient.name}
+              className="h-16 w-16 rounded-full object-cover border-4 border-white/30"
+            />
+          )}
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {patient.name.split(' ')[0]}!</h1>
+            <p className="text-primary-100">Here's your health overview</p>
+          </div>
+        </div>
       </div>
 
       {/* Key Metrics - Simple 3 column layout */}

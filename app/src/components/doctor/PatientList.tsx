@@ -94,9 +94,24 @@ const PatientList: React.FC = () => {
               className="card hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
-                  <p className="text-sm text-gray-600">{patient.age} years old</p>
+                <div className="flex items-center space-x-3">
+                  {patient.profileImage ? (
+                    <img
+                      src={patient.profileImage}
+                      alt={patient.name}
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-600 font-semibold">
+                        {patient.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
+                    <p className="text-sm text-gray-600">{patient.age} years old</p>
+                  </div>
                 </div>
                 <span className={`badge-${a1cStatus.color}`}>
                   {a1cStatus.label}

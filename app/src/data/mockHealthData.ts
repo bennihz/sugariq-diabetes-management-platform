@@ -212,6 +212,12 @@ export const mockHealthData: HealthData[] = [
     a1cReadings: generateA1CReadings(6.54, 'improving'),
     weightReadings: generateWeightReadings(87.8, 'stable'),
   },
+  {
+    patientId: 'P2020', // Tobias Lettenmeier - T2, demo patient
+    glucoseReadings: generateGlucoseReadings(105, 145, 22), // Needs better control
+    a1cReadings: generateA1CReadings(7.2, 'stable'), // Current A1C 7.2%
+    weightReadings: generateWeightReadings(82, 'stable'), // Maintaining healthy weight
+  },
 ];
 
 // Helper function to get health data by patient ID

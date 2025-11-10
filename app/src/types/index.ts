@@ -5,6 +5,7 @@ export interface User {
   name: string;
   role: UserRole;
   email?: string;
+  profileImage?: string;
 }
 
 export interface Patient {
@@ -22,6 +23,7 @@ export interface Patient {
   height: number;
   email: string;
   phone: string;
+  profileImage?: string;
 }
 
 export interface GlucoseReading {

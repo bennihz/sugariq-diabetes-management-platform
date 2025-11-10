@@ -8,7 +8,7 @@ export const mockMedications: Medication[] = [
     dosage: '1000mg',
     frequency: 'Twice daily',
     startDate: '2020-06-08',
-    prescribedBy: 'Dr. Smith',
+    prescribedBy: 'Dr. Afsoon',
     instructions: 'Take with meals',
     status: 'active',
   },
@@ -18,7 +18,7 @@ export const mockMedications: Medication[] = [
     dosage: '10mg',
     frequency: 'Once daily',
     startDate: '2022-03-15',
-    prescribedBy: 'Dr. Smith',
+    prescribedBy: 'Dr. Afsoon',
     instructions: 'Take 30 minutes before breakfast',
     status: 'active',
   },
@@ -354,6 +354,38 @@ export const mockMedications: Medication[] = [
     instructions: 'Can be taken with or without food',
     status: 'active',
   },
+
+  // P2020 - Tobias Lettenmeier (Demo patient)
+  {
+    id: 'M033',
+    name: 'Metformin',
+    dosage: '500mg',
+    frequency: 'Twice daily',
+    startDate: '2025-11-08',
+    prescribedBy: 'Dr. Afsoon',
+    instructions: 'Take with meals',
+    status: 'active',
+  },
+  {
+    id: 'M034',
+    name: 'Atorvastatin',
+    dosage: '10mg',
+    frequency: 'Once daily',
+    startDate: '2020-01-20',
+    prescribedBy: 'Dr. Afsoon',
+    instructions: 'Take at bedtime for cholesterol management',
+    status: 'active',
+  },
+  {
+    id: 'M035',
+    name: 'Lisinopril',
+    dosage: '10mg',
+    frequency: 'Once daily',
+    startDate: '2021-06-10',
+    prescribedBy: 'Dr. Afsoon',
+    instructions: 'For cardiovascular protection, take in the morning',
+    status: 'active',
+  },
 ];
 
 // Helper function to get medications by patient ID
@@ -376,6 +408,7 @@ export const getMedicationsByPatientId = (patientId: string): Medication[] => {
     P2017: ['M027', 'M028'],
     P2018: ['M029', 'M030'],
     P2019: ['M031', 'M032'],
+    P2020: ['M033', 'M034', 'M035'],
   };
 
   const medicationIds = medicationMap[patientId] || [];

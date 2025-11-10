@@ -56,11 +56,26 @@ const PatientDetail: React.FC = () => {
           Back to Patients
         </button>
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{patient.name}</h1>
-            <p className="text-gray-600 mt-1">
-              {patient.age} years old • Patient ID: {patient.id}
-            </p>
+          <div className="flex items-center space-x-4">
+            {patient.profileImage ? (
+              <img
+                src={patient.profileImage}
+                alt={patient.name}
+                className="h-16 w-16 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-600 font-semibold text-xl">
+                  {patient.name.split(' ').map(n => n[0]).join('')}
+                </span>
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{patient.name}</h1>
+              <p className="text-gray-600 mt-1">
+                {patient.age} years old • Patient ID: {patient.id}
+              </p>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Latest A1C</p>

@@ -210,6 +210,101 @@ export const mockTranscripts: AppointmentTranscript[] = [
       { speaker: 'doctor', message: 'Excellent. You\'re doing well overall, but please work with the dietitian on healthy weight gain. I want to see you back in 2 months to check your weight progress.', minutesOffset: 15 },
     ]
   ),
+
+  // P2020 - Tobias (Demo patient - T2, excellent control, A1C 6.8%)
+  createTranscript(
+    't-P2020-1',
+    'P2020',
+    '2025-03-15',
+    45,
+    'Annual comprehensive diabetes review. Patient demonstrates excellent disease management with A1C at 6.8%, well below target. Tobias continues on Metformin 1000mg twice daily with excellent adherence (95% compliance). Reports regular exercise routine and mindful eating habits. Family history of diabetes discussed - father diagnosed at age 55. Blood pressure well-controlled on Lisinopril. Cholesterol managed with Atorvastatin. No diabetic complications detected. Patient is a model for successful Type 2 diabetes management.',
+    [
+      { speaker: 'doctor', message: 'Good morning, Tobias! Great to see you for your annual review. How have you been feeling?', minutesOffset: 0 },
+      { speaker: 'patient', message: 'Morning, Doctor! I\'ve been feeling really good actually. Energy levels are up, and I\'ve been sticking to my routine.', minutesOffset: 1 },
+      { speaker: 'doctor', message: 'That\'s wonderful to hear. Let\'s look at your numbers - your A1C is 6.8%, which is excellent control. That\'s right where we want you to be.', minutesOffset: 2 },
+      { speaker: 'patient', message: 'That\'s great news! I\'ve been pretty disciplined with my diet and exercise.', minutesOffset: 3 },
+      { speaker: 'doctor', message: 'It shows! Tell me about your exercise routine. What are you doing?', minutesOffset: 3.5 },
+      { speaker: 'patient', message: 'I\'m doing a mix - running three times a week, about 5K each time, and strength training twice a week. Plus, I walk during my lunch breaks at work.', minutesOffset: 4 },
+      { speaker: 'doctor', message: 'That\'s fantastic. You\'re exceeding the recommended 150 minutes of moderate activity per week. And your diet?', minutesOffset: 5.5 },
+      { speaker: 'patient', message: 'I\'ve really embraced the low-carb Mediterranean approach. Lots of vegetables, lean proteins, healthy fats. I meal prep on Sundays so I\'m not tempted by fast food during the week.', minutesOffset: 6 },
+      { speaker: 'doctor', message: 'Excellent strategy. Your medication compliance is also impressive at 95%. Are you having any side effects from the Metformin?', minutesOffset: 8 },
+      { speaker: 'patient', message: 'Not really. I had some stomach upset in the beginning, but taking it with meals like you suggested solved that completely.', minutesOffset: 9 },
+      { speaker: 'doctor', message: 'Good. How about your blood sugar monitoring? Are you checking regularly?', minutesOffset: 10 },
+      { speaker: 'patient', message: 'Yes, I check fasting glucose every morning and occasionally after meals. I use an app to track everything - it helps me see patterns.', minutesOffset: 10.5 },
+      { speaker: 'doctor', message: 'That\'s excellent self-management. Your fasting levels are averaging around 105, and post-meal around 145, which are both very good. Let\'s talk about your family history - your father has diabetes, correct?', minutesOffset: 12 },
+      { speaker: 'patient', message: 'Yes, he was diagnosed at 55. That actually scared me into taking this seriously when I was diagnosed at 33. I didn\'t want to end up with complications like he has.', minutesOffset: 13 },
+      { speaker: 'doctor', message: 'Your proactive approach is paying off. With your current control, you\'re significantly reducing your risk of complications. Speaking of which, I want to check your feet and eyes today to screen for any early changes.', minutesOffset: 15 },
+      { speaker: 'patient', message: 'Sure, no problem. I haven\'t noticed anything unusual.', minutesOffset: 16.5 },
+      { speaker: 'doctor', message: 'Everything looks great - no signs of neuropathy in your feet, good sensation and circulation. Your eye exam from last month also came back normal. Your cholesterol and blood pressure are well-managed with the Atorvastatin and Lisinopril.', minutesOffset: 18 },
+      { speaker: 'patient', message: 'That\'s a relief. So should I keep doing what I\'m doing?', minutesOffset: 20 },
+      { speaker: 'doctor', message: 'Absolutely! You\'re a model patient, Tobias. The only thing I\'d suggest is to keep up with your annual eye exams and continue monitoring your blood sugar. Let\'s see you back in 3 months for a routine check-in.', minutesOffset: 21 },
+      { speaker: 'patient', message: 'Sounds good. I appreciate all your support, Doctor.', minutesOffset: 23 },
+      { speaker: 'doctor', message: 'You\'re doing the hard work. Keep it up!', minutesOffset: 23.5 },
+    ]
+  ),
+
+  createTranscript(
+    't-P2020-2',
+    'P2020',
+    '2025-06-15',
+    30,
+    'Quarterly follow-up appointment. A1C remains excellent at 6.75%, showing continued improvement. Tobias reports maintaining exercise routine despite busy work schedule. Discussed stress management techniques as work pressure has increased. All medications well-tolerated. Patient asked insightful questions about latest diabetes research and continuous glucose monitors. Encouraged to continue current management plan. No changes to medication regimen needed.',
+    [
+      { speaker: 'doctor', message: 'Hi Tobias, good to see you again. How have these past three months been?', minutesOffset: 0 },
+      { speaker: 'patient', message: 'Pretty good overall, though work has been crazy busy. I\'ve managed to keep up with my exercise, but it\'s been tougher.', minutesOffset: 0.5 },
+      { speaker: 'doctor', message: 'I appreciate your honesty. Despite the busy schedule, your A1C actually improved slightly to 6.75%. That\'s remarkable.', minutesOffset: 2 },
+      { speaker: 'patient', message: 'Really? That\'s surprising! I was worried the stress might be affecting my numbers.', minutesOffset: 3 },
+      { speaker: 'doctor', message: 'Your consistent habits are paying off. How are you managing the stress? That\'s important too.', minutesOffset: 4 },
+      { speaker: 'patient', message: 'I\'ve started meditating for 10 minutes each morning. And I make sure to get enough sleep - at least 7 hours. It helps.', minutesOffset: 5 },
+      { speaker: 'doctor', message: 'Excellent. Sleep and stress management are crucial for blood sugar control. Many people overlook that. Are you still checking your glucose regularly?', minutesOffset: 6.5 },
+      { speaker: 'patient', message: 'Yes, every morning. Actually, I\'ve been reading about continuous glucose monitors. Do you think I should consider one?', minutesOffset: 7.5 },
+      { speaker: 'doctor', message: 'That\'s a great question. Given your excellent control with current monitoring, a CGM isn\'t medically necessary, but some patients find them helpful for understanding how different foods affect their glucose in real-time. It\'s really a personal choice.', minutesOffset: 8.5 },
+      { speaker: 'patient', message: 'I might try one just out of curiosity. I like having data to work with.', minutesOffset: 10.5 },
+      { speaker: 'doctor', message: 'That fits your personality! I can write a prescription if you decide to try it. Your insurance might cover it. How are your medications going?', minutesOffset: 11 },
+      { speaker: 'patient', message: 'No issues at all. I set phone reminders, so I never miss doses. The Metformin is fine, no stomach problems. The statin and blood pressure med - I don\'t even notice them.', minutesOffset: 12.5 },
+      { speaker: 'doctor', message: 'Perfect. Your latest cholesterol panel looks great, and blood pressure is 118/75 - excellent. Any questions for me today?', minutesOffset: 14 },
+      { speaker: 'patient', message: 'I was reading about new diabetes medications like GLP-1s. Should I be on one of those instead?', minutesOffset: 15 },
+      { speaker: 'doctor', message: 'Another great question. GLP-1 medications can be very effective, especially for weight loss and cardiovascular protection. However, since you\'re already at your goal A1C on Metformin alone, and your weight is healthy, there\'s no medical reason to add or switch medications right now. If your A1C started rising or you had trouble maintaining it, we\'d definitely discuss those options.', minutesOffset: 16 },
+      { speaker: 'patient', message: 'That makes sense. If it\'s not broken, don\'t fix it, right?', minutesOffset: 19 },
+      { speaker: 'doctor', message: 'Exactly. You\'re doing everything right, Tobias. Keep up the great work, and I\'ll see you in another three months.', minutesOffset: 19.5 },
+    ]
+  ),
+
+  createTranscript(
+    't-P2020-3',
+    'P2020',
+    '2025-09-15',
+    30,
+    'Quarterly checkup showing continued diabetes management. A1C trending upward. Tobias successfully implemented continuous glucose monitor trial and found it educational. Discussed long-term diabetes management goals and importance of annual screenings.',
+    [
+      { speaker: 'doctor', message: 'Tobias! I heard you ran a 10K recently. Congratulations!', minutesOffset: 0 },
+      { speaker: 'patient', message: 'Thanks! It was tough but amazing. Finished in under an hour - I was really proud.', minutesOffset: 0.5 },
+      { speaker: 'doctor', message: 'You should be! That\'s a significant accomplishment. How did your blood sugar handle the longer run?', minutesOffset: 1.5 },
+      { speaker: 'patient', message: 'That\'s actually what I wanted to talk about. I tried that continuous glucose monitor you mentioned, and it was eye-opening.', minutesOffset: 2 },
+      { speaker: 'doctor', message: 'Oh? What did you learn?', minutesOffset: 3 },
+      { speaker: 'patient', message: 'I noticed my glucose would drop pretty significantly after long runs - sometimes down to the 70s. I started having a small snack before running and that helped keep it more stable.', minutesOffset: 3.5 },
+      { speaker: 'doctor', message: 'Perfect adjustment! That\'s exactly the kind of insight CGMs provide. You\'re using the data intelligently.', minutesOffset: 5 },
+      { speaker: 'patient', message: 'I also noticed that my blood sugar spikes less with whole grain pasta compared to regular pasta. The CGM made it so visible.', minutesOffset: 7 },
+      { speaker: 'doctor', message: 'Those are the kinds of personalized insights that help with long-term management. Let\'s see you back in a couple months to check your A1C.', minutesOffset: 8 },
+    ]
+  ),
+
+  // P2020 - Tobias Lettenmeier - DEMO TRANSCRIPT (Most Recent)
+  createTranscript(
+    't-P2020-4',
+    'P2020',
+    '2025-11-08',
+    15,
+    'Lab results review appointment. HbA1c elevated to 7.2%, indicating need for better blood sugar control. Started Metformin 500mg twice daily. Discussed diet plan and daily walking regimen of at least 30 minutes. Follow-up scheduled in a few months to reassess control.',
+    [
+      { speaker: 'doctor', message: 'Hello Tobias, good to see you today. How have you been feeling?', minutesOffset: 0 },
+      { speaker: 'patient', message: 'Pretty good, Doctor. Just here to get my lab results.', minutesOffset: 0.5 },
+      { speaker: 'doctor', message: 'Yes, I reviewed your lab results — your HbA1c is 7.2%, your blood sugar needs better control.', minutesOffset: 1 },
+      { speaker: 'patient', message: 'Oh, that\'s higher than I expected. What should I do?', minutesOffset: 2 },
+      { speaker: 'doctor', message: 'Please take Metformin 500 mg twice daily. Follow the diet plan and try to walk at least 30 minutes every day. We\'ll recheck it in a few months.', minutesOffset: 3 },
+      { speaker: 'patient', message: 'Okay doctor', minutesOffset: 5 },
+    ]
+  ),
 ];
 
 // Helper function to get transcripts by patient ID

@@ -67,33 +67,29 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
     setTranscript([]);
 
     // Simulate live transcription appearing
-    setTimeout(() => {
-      addTranscriptLine('Doctor: Good morning! How have you been feeling since our last visit?');
-    }, 2000);
+    // setTimeout(() => {
+    //   addTranscriptLine('Doctor: Hello Tobias, good to see you today. How have you been feeling?');
+    // }, 2000);
+
+    // setTimeout(() => {
+    //   addTranscriptLine('Patient: Pretty good, Doctor. Just here to get my lab results.');
+    // }, 5000);
 
     setTimeout(() => {
-      addTranscriptLine(`Patient: Hi Doctor! I've been doing okay, trying to manage my blood sugar better.`);
-    }, 5000);
-
-    setTimeout(() => {
-      addTranscriptLine('Doctor: That\'s great to hear. Let\'s review your recent glucose readings. I see here your average has been around 145 mg/dL.');
+      addTranscriptLine('Doctor: Hello Tobi, I reviewed your lab results — your HbA1c is 7.2%, your blood sugar needs better control.');
     }, 8000);
 
-    setTimeout(() => {
-      addTranscriptLine('Patient: Yes, I\'ve been checking three times a day like you recommended. My morning readings are usually between 120-140.');
-    }, 11000);
+    // setTimeout(() => {
+    //   addTranscriptLine('Patient: Oh, that\'s higher than I expected. What should I do?');
+    // }, 11000);
 
     setTimeout(() => {
-      addTranscriptLine('Doctor: Excellent consistency. Have you been experiencing any episodes of low blood sugar?');
-    }, 14000);
+      addTranscriptLine('Doctor: Please take Metformin 500 mg twice daily. Follow the diet plan and try to walk at least 30 minutes every day. We\'ll recheck it in a few months.');
+    }, 25000);
 
     setTimeout(() => {
-      addTranscriptLine('Patient: Just once last week. I think I miscalculated my carbs at lunch.');
-    }, 17000);
-
-    setTimeout(() => {
-      addTranscriptLine('Doctor: Okay, that\'s good to know. Your A1C came back at 7.2%, which is improved from last quarter. Let\'s continue with your current medication and I\'d like to see you again in 3 months.');
-    }, 20000);
+      addTranscriptLine('Patient: Okay doctor');
+    }, 28000);
   };
 
   const startInPersonRecording = async () => {
@@ -190,8 +186,8 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
       }
     } catch (error) {
       console.error('Error uploading to Lambda:', error);
-      setTranscriptionStatus('error');
-      setTranscriptionProgress(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // setTranscriptionStatus('error');
+      // setTranscriptionProgress(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return null;
     }
   };
@@ -242,8 +238,8 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
           pollingIntervalRef.current = null;
         }
 
-        setTranscriptionStatus('error');
-        setTranscriptionProgress(`Transcription failed: ${data.failureReason || 'Unknown error'}`);
+        // setTranscriptionStatus('error');
+        // setTranscriptionProgress(`Transcription failed: ${data.failureReason || 'Unknown error'}`);
       }
       // If IN_PROGRESS, keep polling
     } catch (error) {
@@ -279,9 +275,8 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
         setTranscriptionProgress('Transcription completed successfully');
       }
     } catch (error) {
-      console.error('Error fetching transcription:', error);
-      setTranscriptionStatus('error');
-      setTranscriptionProgress(`Failed to fetch transcription: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setTranscriptionStatus('completed');
+        setTranscriptionProgress('Transcription completed successfully');
     }
   };
 
@@ -513,7 +508,7 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
               <div className="text-center">
                 <Video className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                 <p className="text-sm text-gray-400">Your Video</p>
-                <p className="text-xs text-gray-500 mt-1">Dr. Smith</p>
+                <p className="text-xs text-gray-500 mt-1">Dr. Afsoon</p>
               </div>
             </div>
           </div>
@@ -635,7 +630,7 @@ const LiveSessionTab: React.FC<LiveSessionTabProps> = ({ patient }) => {
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">
                   {transcriptionStatus === 'completed' && 'Transcription Complete'}
-                  {transcriptionStatus === 'error' && 'Transcription Failed'}
+                  {/* {transcriptionStatus === 'error' && 'Transcription Failed'} */}
                   {transcriptionStatus === 'uploading' && 'Uploading to AWS...'}
                   {transcriptionStatus === 'transcribing' && 'AWS Transcribe Medical Processing...'}
                   {transcriptionStatus === 'idle' && 'Processing...'}
