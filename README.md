@@ -204,11 +204,11 @@ This project was built by a diverse team of engineers, doctors, and data scienti
   *Data Analytics / Software Engineering* 
   Medical text preprocessing (Amazon Comprehend Medical, medspaCy), multilingual support, language level adaptation (formal/informal)
 
-- **Dr. Afsoon**
+- **Dr. Afsoon** ([@Afsooneshraq](https://github.com/Afsooneshraq))
   *Medical Doctor (GP) / Data Science*
   <!-- Dr. Afsoon: Please add your contributions here -->
 
-- **Tobias Lettenmeier**
+- **Tobias Lettenmeier** ([@FlintBeastwood](https://github.com/FlintBeastwood))
   *AI Automation / Prototyping*
   <!-- Tobias: Please add your contributions here -->
 
